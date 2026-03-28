@@ -1,0 +1,322 @@
+========================================
+🎮 游戏提供的可用工具 (Tools):
+========================================
+🔹 【get_game_state】
+   说明: Get the current Slay the Spire 2 game state.
+
+Returns the full game state including player stats, hand, enemies, potions, etc.
+The state_type field indicates the current screen (combat, map, event, shop, etc.).
+
+Args:
+    format: "markdown" for human-readable output, "json" for structured data.
+
+----------------------------------------
+🔹 【use_potion】
+   说明: Use a potion from the player's potion slots.
+
+Works both during and outside of combat. Combat-only potions require an active battle.
+
+Args:
+    slot: Potion slot index (as shown in game state).
+    target: Entity ID of the target enemy (e.g. "JAW_WORM_0"). Required for enemy-targeted potions.
+
+----------------------------------------
+🔹 【proceed_to_map】
+   说明: Proceed from the current screen to the map.
+
+Works from: rewards screen, rest site, shop.
+Does NOT work for events — use event_choose_option() with the Proceed option's index.
+
+----------------------------------------
+🔹 【combat_play_card】
+   说明: [Combat] Play a card from the player's hand.
+
+Args:
+    card_index: Index of the card in hand (0-based, as shown in game state).
+    target: Entity ID of the target enemy (e.g. "JAW_WORM_0"). Required for single-target cards.
+
+Note that the index can change as cards are played - playing a card will shift the indices of remaining cards in hand.
+Refer to the latest game state for accurate indices. New cards are drawn to the right, so playing cards from right to left can help maintain more stable indices for remaining cards.
+
+----------------------------------------
+🔹 【combat_end_turn】
+   说明: [Combat] End the player's current turn.
+----------------------------------------
+🔹 【combat_select_card】
+   说明: [Combat Selection] Select a card from hand during an in-combat card selection prompt.
+
+Used when a card effect asks you to select a card to exhaust, discard, etc.
+This is different from deck_select_card which handles out-of-combat card selection overlays.
+
+Args:
+    card_index: 0-based index of the card in the selectable hand cards (as shown in game state).
+
+----------------------------------------
+🔹 【combat_confirm_selection】
+   说明: [Combat Selection] Confirm the in-combat card selection.
+
+After selecting the required number of cards from hand (exhaust, discard, etc.),
+use this to confirm the selection. Only works when the confirm button is enabled.
+
+----------------------------------------
+🔹 【rewards_claim】
+   说明: [Rewards] Claim a reward from the post-combat rewards screen.
+
+Gold, potion, and relic rewards are claimed immediately.
+Card rewards open the card selection screen (state changes to card_reward).
+
+Args:
+    reward_index: 0-based index of the reward on the rewards screen.
+
+Note that claiming a reward may change the indices of remaining rewards, so refer to the latest game state for accurate indices.
+Claiming from right to left can help maintain more stable indices for remaining rewards, as rewards will always shift left to fill in gaps.
+
+----------------------------------------
+🔹 【rewards_pick_card】
+   说明: [Rewards] Select a card from the card reward selection screen.
+
+Args:
+    card_index: 0-based index of the card to add to the deck.
+
+----------------------------------------
+🔹 【rewards_skip_card】
+   说明: [Rewards] Skip the card reward without selecting a card.
+----------------------------------------
+🔹 【map_choose_node】
+   说明: [Map] Choose a map node to travel to.
+
+Args:
+    node_index: 0-based index of the node from the next_options list.
+
+----------------------------------------
+🔹 【rest_choose_option】
+   说明: [Rest Site] Choose a rest site option (rest, smith, etc.).
+
+Args:
+    option_index: 0-based index of the option from the rest site state.
+
+----------------------------------------
+🔹 【shop_purchase】
+   说明: [Shop] Purchase an item from the shop.
+
+Args:
+    item_index: 0-based index of the item from the shop state.
+
+----------------------------------------
+🔹 【event_choose_option】
+   说明: [Event] Choose an event option.
+
+Works for both regular events and ancients (after dialogue ends).
+Also used to click the Proceed option after an event resolves.
+
+Args:
+    option_index: 0-based index of the unlocked option.
+
+----------------------------------------
+🔹 【event_advance_dialogue】
+   说明: [Event] Advance ancient event dialogue.
+
+Click through dialogue text in ancient events. Call repeatedly until options appear.
+
+----------------------------------------
+🔹 【deck_select_card】
+   说明: [Card Selection] Select or deselect a card in the card selection screen.
+
+Used when the game asks you to choose cards from your deck (transform, upgrade,
+remove, discard) or pick a card from offered choices (potions, effects).
+
+For deck selections: toggles card selection. For choose-a-card: picks immediately.
+
+Args:
+    card_index: 0-based index of the card (as shown in game state).
+
+----------------------------------------
+🔹 【deck_confirm_selection】
+   说明: [Card Selection] Confirm the current card selection.
+
+After selecting the required number of cards, use this to confirm.
+If a preview is showing (e.g., transform preview), this confirms the preview.
+Not needed for choose-a-card screens where picking is immediate.
+
+----------------------------------------
+🔹 【deck_cancel_selection】
+   说明: [Card Selection] Cancel the current card selection.
+
+If a preview is showing, goes back to the selection grid.
+For choose-a-card screens, clicks the skip button (if available).
+Otherwise, closes the card selection screen (only if cancellation is allowed).
+
+----------------------------------------
+🔹 【relic_select】
+   说明: [Relic Selection] Select a relic from the relic selection screen.
+
+Used when the game offers a choice of relics (e.g., boss relic rewards).
+
+Args:
+    relic_index: 0-based index of the relic (as shown in game state).
+
+----------------------------------------
+🔹 【relic_skip】
+   说明: [Relic Selection] Skip the relic selection without choosing a relic.
+----------------------------------------
+🔹 【treasure_claim_relic】
+   说明: [Treasure] Claim a relic from the treasure chest.
+
+The chest is auto-opened when entering the treasure room.
+After claiming, use proceed_to_map() to continue.
+
+Args:
+    relic_index: 0-based index of the relic (as shown in game state).
+
+----------------------------------------
+🔹 【mp_get_game_state】
+   说明: [Multiplayer] Get the current multiplayer game state.
+
+Returns full game state for ALL players: HP, powers, relics, potions,
+plus multiplayer-specific data: map votes, event votes, treasure bids,
+end-turn ready status. Only works during a multiplayer run.
+
+Args:
+    format: "markdown" for human-readable output, "json" for structured data.
+
+----------------------------------------
+🔹 【mp_combat_play_card】
+   说明: [Multiplayer Combat] Play a card from the local player's hand.
+
+Same as singleplayer combat_play_card but routed through the multiplayer
+endpoint for sync safety.
+
+Args:
+    card_index: Index of the card in hand (0-based).
+    target: Entity ID of the target enemy (e.g. "JAW_WORM_0"). Required for single-target cards.
+
+----------------------------------------
+🔹 【mp_combat_end_turn】
+   说明: [Multiplayer Combat] Submit end-turn vote.
+
+In multiplayer, ending the turn is a VOTE — the turn only ends when ALL
+players have submitted. Use mp_combat_undo_end_turn() to retract.
+
+----------------------------------------
+🔹 【mp_combat_undo_end_turn】
+   说明: [Multiplayer Combat] Retract end-turn vote.
+
+If you submitted end turn but want to play more cards, use this to undo.
+Only works if other players haven't all committed yet.
+
+----------------------------------------
+🔹 【mp_use_potion】
+   说明: [Multiplayer] Use a potion from the local player's potion slots.
+
+Args:
+    slot: Potion slot index (as shown in game state).
+    target: Entity ID of the target enemy. Required for enemy-targeted potions.
+
+----------------------------------------
+🔹 【mp_map_vote】
+   说明: [Multiplayer Map] Vote for a map node to travel to.
+
+In multiplayer, map selection is a vote — travel happens when all players
+agree. Re-voting for the same node sends a ping to other players.
+
+Args:
+    node_index: 0-based index of the node from the next_options list.
+
+----------------------------------------
+🔹 【mp_event_choose_option】
+   说明: [Multiplayer Event] Choose or vote for an event option.
+
+For shared events: this is a vote (resolves when all players vote).
+For individual events: immediate choice, same as singleplayer.
+
+Args:
+    option_index: 0-based index of the unlocked option.
+
+----------------------------------------
+🔹 【mp_event_advance_dialogue】
+   说明: [Multiplayer Event] Advance ancient event dialogue.
+----------------------------------------
+🔹 【mp_rest_choose_option】
+   说明: [Multiplayer Rest Site] Choose a rest site option (rest, smith, etc.).
+
+Per-player choice — no voting needed.
+
+Args:
+    option_index: 0-based index of the option.
+
+----------------------------------------
+🔹 【mp_shop_purchase】
+   说明: [Multiplayer Shop] Purchase an item from the shop.
+
+Per-player inventory — no voting needed.
+
+Args:
+    item_index: 0-based index of the item.
+
+----------------------------------------
+🔹 【mp_rewards_claim】
+   说明: [Multiplayer Rewards] Claim a reward from the post-combat rewards screen.
+
+Args:
+    reward_index: 0-based index of the reward.
+
+----------------------------------------
+🔹 【mp_rewards_pick_card】
+   说明: [Multiplayer Rewards] Select a card from the card reward screen.
+
+Args:
+    card_index: 0-based index of the card to add to the deck.
+
+----------------------------------------
+🔹 【mp_rewards_skip_card】
+   说明: [Multiplayer Rewards] Skip the card reward.
+----------------------------------------
+🔹 【mp_proceed_to_map】
+   说明: [Multiplayer] Proceed from the current screen to the map.
+
+Works from: rewards screen, rest site, shop.
+
+----------------------------------------
+🔹 【mp_deck_select_card】
+   说明: [Multiplayer Card Selection] Select or deselect a card in the card selection screen.
+
+Args:
+    card_index: 0-based index of the card.
+
+----------------------------------------
+🔹 【mp_deck_confirm_selection】
+   说明: [Multiplayer Card Selection] Confirm the current card selection.
+----------------------------------------
+🔹 【mp_deck_cancel_selection】
+   说明: [Multiplayer Card Selection] Cancel the current card selection.
+----------------------------------------
+🔹 【mp_combat_select_card】
+   说明: [Multiplayer Combat Selection] Select a card from hand during in-combat card selection.
+
+Args:
+    card_index: 0-based index of the card in the selectable hand cards.
+
+----------------------------------------
+🔹 【mp_combat_confirm_selection】
+   说明: [Multiplayer Combat Selection] Confirm the in-combat card selection.
+----------------------------------------
+🔹 【mp_relic_select】
+   说明: [Multiplayer Relic Selection] Select a relic (boss relic rewards).
+
+Args:
+    relic_index: 0-based index of the relic.
+
+----------------------------------------
+🔹 【mp_relic_skip】
+   说明: [Multiplayer Relic Selection] Skip the relic selection.
+----------------------------------------
+🔹 【mp_treasure_claim_relic】
+   说明: [Multiplayer Treasure] Bid on / claim a relic from the treasure chest.
+
+In multiplayer, this is a bid — if multiple players pick the same relic,
+a "relic fight" determines the winner. Others get consolation prizes.
+
+Args:
+    relic_index: 0-based index of the relic.
+
+----------------------------------------
