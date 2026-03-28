@@ -35,6 +35,9 @@ async def test_connection():
                     print(f"🔹 【{tool.name}】")
                     print(f"   说明: {tool.description}")
                     print("-" * 40)
+                state_response = await session.call_tool("get_game_state")
+                game_state_text = state_response.content[0].text
+                print(game_state_text)
 
     except Exception as e:
         print(f"\n❌ 连接失败！报错信息如下：\n{e}")

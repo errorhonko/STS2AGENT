@@ -67,8 +67,17 @@ class LLM:
         print("🧠 正在请求大模型决策...")
         # 1. 感知：获取当前状态
         state = await self.mcp_client.get_state()
+        print("\n" + "=" * 30 + " 📥 当前游戏状态 (State) " + "=" * 30)
         self.history.append({"role": "user", "content": state})
-        if len(self.history) > 10:
+        import json
+        if isinstance(state, (dict, list)):
+            print(json.dumps(state, indent=2, ensure_ascii=False))
+        else:
+            print(state)
+
+        print("=" * 85 + "\n")
+
+        if len(self.history) > 3:
             # 保留第一条 System Prompt（如果有的话）
             self.history = [self.history[0]] + self.history[-9:]
         #  准备工具列表
@@ -87,12 +96,15 @@ class LLM:
             model=self.model,  # 使用加载类里配置好的模型名
             messages=self.history,  # 包含之前的游戏状态和对话
             tools=openai_tools,  # 拍给 AI 的技能说明书
-            tool_choice="required",  # 让 AI 自动决定是说话还是用工具
+            tool_choice="auto",  # 让 AI 自动决定是说话还是用工具
             temperature=self.temperature,  # 冷静程度
             max_tokens=self.max_tokens  # 防止废话
         )
+        print("\n🔍 原始响应报文:")
+        print(json.dumps(response.model_dump(), indent=2, ensure_ascii=False))
         # 提取 AI 的回答对象
         ai_message = response.choices[0].message
+
         # 检查是否有工具调用请求
         tool_calls = ai_message.tool_calls
 
