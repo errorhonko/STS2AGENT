@@ -9,6 +9,9 @@ from typing import Optional, Iterator, List, Dict, Union, Any, AsyncIterator
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from enum import Enum
+from agent_core.PromptRouter import PromptRouter
+from agent_core.Observation import Observation
+from agent_core.Executor import Executor
 load_dotenv()
 class ExecutionMode(Enum):
     BATCH = "batch"           # 连招模式：一口气全打出去
@@ -33,9 +36,6 @@ class LLM:
         self.api_key = api_key or os.getenv("LLM_API_KEY")
         self.base_url = base_url or os.getenv("LLM_BASE_URL")
         self.history = []  #  TODO 以后扩展 记忆上下文
-        # 验证凭证是否存在
-        if not self.api_key:
-            raise ValueError("ModelScope API key not found. Please set MODELSCOPE_API_KEY environment variable.")
 
         # 设置默认模型和其他参数
         self.model = model or os.getenv("LLM_MODEL_ID")
@@ -46,7 +46,31 @@ class LLM:
 
         # 使用获取的参数创建OpenAI客户端实例
         self._client = AsyncOpenAI(api_key=self.api_key,
-                              base_url=self.base_url, timeout=self.timeout)
+                                   base_url=self.base_url, timeout=self.timeout)
+        # 1. 提示词初始化
+        self.router = PromptRouter()
+        # 2. 观察初始化
+        self.observation = Observation(
+            llm=self._client,
+            prompt_router=self.router,
+            model_name=self.model,
+            temperature=0.3  # 军师可以稍微发散一点
+        )
+
+        # 3. 执行初始化
+        self.executor = Executor(
+            llm_client=self._client,
+            mcp_client=self.mcp_client,
+            prompt_router=self.router,
+            model_name=self.model,
+            temperature=0.0  # 士兵必须绝对精准，温度设为0
+        )
+
+        # 验证凭证是否存在
+        if not self.api_key:
+            raise ValueError("ModelScope API key not found. Please set MODELSCOPE_API_KEY environment variable.")
+
+
 
 
     async def start_thinking_loop(self):
@@ -58,8 +82,8 @@ class LLM:
         while True:
             print("\n--- 新的回合 ---")
 
-            await self.decide_and_act()
-
+            # await self.decide_and_act()
+            await self.observe_and_execute()
 
             await asyncio.sleep(3)
 
@@ -134,8 +158,10 @@ class LLM:
             # 将 AI 的对话存入历史
             self.history.append({"role": "assistant", "content": ai_message.content})
 
-          
-
+    async def observe_and_execute (self):
+        raw_state = await self.mcp_client.get_state()
+        state_type, clean_state, strategy = await self.observation.analyze(raw_state)
+        result = await self.executor.execute(state_type, clean_state, strategy)
        
 
     async def execute_single_call(self, tool_call):
