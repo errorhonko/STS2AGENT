@@ -4,14 +4,14 @@ import re
 
 
 class Executor:
-    def __init__(self, llm_client, mcp_client, prompt_router, model_name: str, temperature: float = 0.0):
+    def __init__(self, llm_client, mcp_client, prompt_router, model_name: str, temperature: float = 0.1):
         """
         初始化执行局
         :param llm_client: OpenAI 兼容客户端
         :param mcp_client: 杀戮尖塔 MCP 客户端
         :param prompt_router: 提示词路由
         :param model_name: 模型名称 (如 "qwen3.5-9b")
-        :param temperature: 强烈建议设为 0.0！执行阶段不需要任何创造力，只需要精准。
+        :param temperature: 执行阶段不需要任何创造力，只需要精准。
         """
         self.llm = llm_client
         self.mcp_client = mcp_client
@@ -25,9 +25,9 @@ class Executor:
         """
         # 1. 组装执行指令（把策略塞进 Prompt 里）
         system_prompt = self.router.get_action_prompt(state_type, strategy)
-
+        print(system_prompt)
         # 2. 获取当前可用的工具集
-        # TODO 进阶优化：以后可以写个 get_tools_by_type(state_type) 只传相关工具以节省 Token
+
         available_tools = self.mcp_client.tools
         #  准备工具列表
         openai_tools = [
@@ -60,45 +60,7 @@ class Executor:
         execution_results = await self._run_tools(tool_invocations)
         return execution_results
 
-        # execution_results = []
-        #
-        # # 4. 解析并执行 Tool Calls
-        # if message.tool_calls:
-        #     for tool_call in message.tool_calls:
-        #         func_name = tool_call.function.name
-        #
-        #         # 安全解析参数 (处理大模型可能返回的字符串格式)
-        #         try:
-        #             args = json.loads(tool_call.function.arguments)
-        #         except json.JSONDecodeError:
-        #             print(f"⚠️ [执行] 参数解析失败，原始参数: {tool_call.function.arguments}")
-        #             args = {}
-        #
-        #         print(f"⚡ [执行] 扣动扳机 -> {func_name}({args})")
-        #
-        #         # 真正调用 MCP 客户端操作游戏
-        #         try:
-        #             result = await self.mcp_client.call_tool(func_name, args)
-        #             execution_results.append({
-        #                 "tool": func_name,
-        #                 "status": "success",
-        #                 "response": result
-        #             })
-        #             print(f"✅ [执行局] 动作完成，游戏返回: {result}")
-        #         except Exception as e:
-        #             error_msg = str(e)
-        #             execution_results.append({
-        #                 "tool": func_name,
-        #                 "status": "error",
-        #                 "response": error_msg
-        #             })
-        #             print(f"❌ [执行局] 动作报错: {error_msg}")
-        # else:
-        #     # 防御性编程：以防万一模型还是犯病了
-        #     print(f"⚠️ [执行] 警告：模型违抗了指令，没有调用任何工具！")
-        #     print(f"模型的狡辩: {message.content}")
-        #
-        # return execution_results
+
 
     def _extract_tool_calls(self, message) -> list:
         """提取工具调用（兼容 JSON 与 Qwen XML）"""

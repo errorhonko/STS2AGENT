@@ -28,13 +28,13 @@ async def test_connection():
                 print("🔍 正在拉取游戏支持的指令列表...")
                 tools_response = await session.list_tools()
 
-                print("\n" + "=" * 40)
-                print("🎮 游戏提供的可用工具 (Tools):")
-                print("=" * 40)
-                for tool in tools_response.tools:
-                    print(f"🔹 【{tool.name}】")
-                    print(f"   说明: {tool.description}")
-                    print("-" * 40)
+                # print("\n" + "=" * 40)
+                # print("🎮 游戏提供的可用工具 (Tools):")
+                # print("=" * 40)
+                # for tool in tools_response.tools:
+                #     print(f"🔹 【{tool.name}】")
+                #     print(f"   说明: {tool.description}")
+                #     print("-" * 40)
                 state_response = await session.call_tool("get_game_state")
                 game_state_text = state_response.content[0].text
                 print(game_state_text)

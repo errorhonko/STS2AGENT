@@ -1,0 +1,15 @@
+{
+  "output": "rag_documents.jsonl",
+  "document_count": 1198,
+  "doc_type_counts": {
+    "archetype": 17,
+    "card": 576,
+    "card_archetype_relation": 254,
+    "character_overview": 5,
+    "relic": 297,
+    "relic_archetype_relation": 49
+  },
+  "warnings": [
+    "Community stats were extracted with a lenient parser because card_library.json contains malformed localized fields."
+  ]
+}
