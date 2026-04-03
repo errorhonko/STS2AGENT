@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/STS2AGENT.iml" filepath="$PROJECT_DIR$/.idea/STS2AGENT.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../sts2-adviser-main/.idea/sts2-adviser-main.iml" filepath="$PROJECT_DIR$/../sts2-adviser-main/.idea/sts2-adviser-main.iml" />
     </modules>
   </component>
 </project>
